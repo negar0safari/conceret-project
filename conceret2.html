@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>طراحی ستون کوتاه بتن‌آرمه</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: Tahoma; }
+    .input {
+      width: 100%;
+      margin-top: 4px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+    }
+    .input:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px #6366f1;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 p-6">
+
+<div class="max-w-4xl mx-auto">
+
+  <!-- HEADER -->
+  <div class="text-center mb-6">
+    <h1 class="text-2xl font-bold text-slate-800">
+      طراحی ستون کوتاه بتن‌آرمه
+    </h1>
+    <p class="text-sm text-slate-600 mt-1">
+      روش آزمون و اصلاح – حالت کششی و فشاری
+    </p>
+  </div>
+
+  <div class="bg-white rounded-2xl shadow-xl p-6">
+
+    <!-- MODE -->
+    <div class="mb-4">
+      <label class="font-bold text-slate-700">حالت طراحی</label>
+      <select id="mode" class="input">
+        <option value="tension">حالت کششی</option>
+        <option value="compression">حالت فشاری</option>
+      </select>
+    </div>
+
+    <!-- INPUTS -->
+    <h2 class="font-bold text-indigo-700 mb-3">
+      مشخصات مقطع و حدس اولیه
+    </h2>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-6">
+      <div><label>b (mm)</label><input id="b" value="300" class="input"></div>
+      <div><label>h (mm)</label><input id="h" value="500" class="input"></div>
+      <div><label>d′ (mm)</label><input id="dp" value="50" class="input"></div>
+      <div><label>As (mm²)</label><input id="As" value="1600" class="input"></div>
+      <div><label>A's (mm²)</label><input id="Aps" value="800" class="input"></div>
+      <div><label>a (mm)</label><input id="a0" value="120" class="input"></div>
+    </div>
+
+    <!-- BUTTON -->
+    <button onclick="calc()"
+      class="w-full bg-gradient-to-r from-indigo-600 to-purple-600
+             hover:from-indigo-700 hover:to-purple-700
+             text-white py-3 rounded-xl font-bold shadow-lg transition">
+      محاسبه Pn ، Mn و خروج از مرکزیت
+    </button>
+
+    <!-- SEARCH OPEN -->
+    <div class="mt-6 p-4 rounded-xl bg-indigo-50 border-2 border-indigo-400">
+      <h2 class="text-lg font-extrabold text-indigo-700 text-center">
+        🔍 سرچ باز (Search Open)
+      </h2>
+      <p class="text-center font-bold text-indigo-800 mt-2">
+        کششی: e′ ≈ e₀  |  فشاری: e ≥ e<sub>min</sub>
+      </p>
+      <p class="text-center text-sm mt-1">
+        e<sub>min</sub> = 0.05h
+      </p>
+    </div>
+
+    <!-- OUTPUT -->
+    <div id="out" class="mt-6"></div>
+
+  </div>
+</div>
+
+<script>
+function calc() {
+
+  const mode = document.getElementById("mode").value;
+
+  const b   = +document.getElementById("b").value;
+  const h   = +document.getElementById("h").value;
+  const dp  = +document.getElementById("dp").value;
+  const As  = +document.getElementById("As").value;
+  const Aps = +document.getElementById("Aps").value;
+  const a   = +document.getElementById("a0").value;
+
+  const fc = 30;   // MPa
+  const fy = 400;
+  const fy2 = 400;
+
+  const d  = h - dp;
+  const d2 = h / 2;
+
+  const Cc = 0.85 * fc * b * a;
+  const Cs = Aps * fy2;
+  const Ts = As * fy;
+
+  let Pn, ePrime, e, Mn, message, badge;
+
+  if (mode === "tension") {
+    // حالت کششی
+    Pn = Cc + Cs - Ts;
+    ePrime = (Cc * (d - a / 2) + Cs * (d - dp)) / Pn;
+    e = ePrime - d2;
+    Mn = Pn * e;
+
+    message = "حالت کششی کنترل‌کننده است (e′ ≈ e₀)";
+    badge = "bg-indigo-100 text-indigo-700 border-indigo-300";
+  } else {
+    // حالت فشاری
+    Pn = Cc + Cs + Ts;
+    ePrime = (Cc * (d - a / 2) + Cs * (d - dp) + Ts * (d - dp)) / Pn;
+    e = ePrime - d2;
+
+    const emin = 0.05 * h;
+    let corrected = false;
+
+    if (e < emin) {
+      e = emin;
+      corrected = true;
+    }
+
+    Mn = Pn * e;
+
+    message = corrected
+      ? "حالت فشاری: e اصلاح شد و برابر emin در نظر گرفته شد"
+      : "حالت فشاری: e ≥ emin (مقطع قابل قبول است)";
+
+    badge = corrected
+      ? "bg-amber-100 text-amber-700 border-amber-300"
+      : "bg-emerald-100 text-emerald-700 border-emerald-300";
+  }
+
+  document.getElementById("out").innerHTML = `
+    <div class="rounded-2xl border p-5 ${badge}">
+      <div class="flex justify-between items-center mb-3">
+        <p class="font-bold text-lg">نتایج طراحی</p>
+        <span class="text-xs px-3 py-1 rounded-full bg-white font-bold">
+          ${mode === "tension" ? "کششی" : "فشاری"}
+        </span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 text-sm">
+        <p>Pn = <b>${Pn.toFixed(0)}</b> N</p>
+        <p>Mn = <b>${Mn.toFixed(0)}</b> N·mm</p>
+        <p>e′ = <b>${ePrime.toFixed(2)}</b> mm</p>
+        <p>e = <b>${e.toFixed(2)}</b> mm</p>
+      </div>
+
+      <p class="mt-3 font-bold text-sm">
+        ${message}
+      </p>
+    </div>`;
+}
+</script>
+
+</body>
+</html>
