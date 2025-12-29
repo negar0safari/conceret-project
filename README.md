@@ -66,13 +66,15 @@
 ---
 
 ## 📂 ساختار پروژه
+#img
+<img width="1351" height="627" alt="Screenshot_14" src="https://github.com/user-attachments/assets/abdf31a9-9aa2-451c-8a26-51d20bd3a319" />
 
 ```text
 short-column-design/
 ├── index.html
 └── README.md
-#img
-<img width="1351" height="627" alt="Screenshot_14" src="https://github.com/user-attachments/assets/abdf31a9-9aa2-451c-8a26-51d20bd3a319" />
+
+
 
 
 
